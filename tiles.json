@@ -1933,6 +1933,7 @@
   },
   {
     "texture": "Overworld_Tileset_07_12",
+    "type": "door",
     "collision": [
       true,
       true,
@@ -1947,6 +1948,7 @@
   },
   {
     "texture": "Overworld_Tileset_07_13",
+    "type": "door",
     "collision": [
       true,
       true,
@@ -2185,6 +2187,7 @@
   },
   {
     "texture": "Overworld_Tileset_08_12",
+    "type": "door",
     "collision": [
       false,
       false,
@@ -2199,6 +2202,7 @@
   },
   {
     "texture": "Overworld_Tileset_08_13",
+    "type": "door",
     "collision": [
       true,
       true,
