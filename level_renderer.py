@@ -126,9 +126,12 @@ class TileWorld(PyGameScene):
     is_select_mode = False
     selected : tuple[TileChunk,int] | None = None
 
-    def get_position(self, position_offset : Vector2i = Vector2i(0,0)) -> Vector2i:
+    def get_position(self, position_offset : Vector2i = Vector2i(0,0), is_override : bool = False) -> Vector2i:
         print(self.position.x * (self.tile_size / 64.0))
-        return Vector2i(int((self.position.x + position_offset.x) * (self.tile_size / 64.0)),int((self.position.y + position_offset.x) * (self.tile_size / 64.0)))
+        if is_override:
+            return Vector2i(int((position_offset.x) * (self.tile_size / 64.0)),
+                            int((position_offset.y) * (self.tile_size / 64.0)))
+        return Vector2i(int((self.position.x + position_offset.x) * (self.tile_size / 64.0)),int((self.position.y + position_offset.y) * (self.tile_size / 64.0)))
     def update(self):
         global tiles
         super().update()
@@ -283,21 +286,21 @@ class TileWorld(PyGameScene):
                 can_move_x = True
                 can_move_y = True
                 local_rect_x = pygame.Rect(0,0,self.tile_size // 2 + 2,self.tile_size)
-                local_rect_x.center = (self.get_position().x + (dx * speed_px_per_frame), self.get_position().y)
+                local_rect_x.center = (self.get_position(Vector2i((dx * speed_px_per_frame),0)).x, self.get_position().y)
                 local_rect_y = pygame.Rect(0,0,self.tile_size // 2 + 2,self.tile_size)
-                local_rect_y.center = (self.get_position().x, self.get_position().y + (dy * speed_px_per_frame))
+                local_rect_y.center = (self.get_position().x, self.get_position(Vector2i(0, (dy * speed_px_per_frame))).y)
                 local_rect_current = pygame.Rect(0,0,self.tile_size // 2 + 2,self.tile_size)
-                local_rect_current.center = (self.get_position().x, self.get_position().y)
+                local_rect_current.center = (self.get_position(Vector2i((dx * speed_px_per_frame), 0)).x, self.get_position(Vector2i(0, (dy * speed_px_per_frame))).y)
                 for key in online_handler.online_players:
                     p = online_handler.online_players[key]
                     print(f"Player: {p.dimension} Self: {self.dimension}")
                     if p.dimension != self.dimension:
                         continue
-                    online_player_pos = (((p.position + -p.old_pos) / 7.0) * p.tick) + p.old_pos
+                    online_player_pos = (((self.get_position(p.position,True) + -self.get_position(p.old_pos,True)) / 7.0) * p.tick) + self.get_position(p.old_pos,True)
 
                     pos = Vector2i(
-                        clamp(online_player_pos.x, min(p.position.x, p.old_pos.x), max(p.position.x, p.old_pos.x)),
-                        clamp(online_player_pos.y, min(p.position.y, p.old_pos.y), max(p.position.y, p.old_pos.y)))
+                        clamp(online_player_pos.x, min(self.get_position(p.position,True).x, self.get_position(p.old_pos,True).x), max(self.get_position(p.position,True).x, self.get_position(p.old_pos,True).x)),
+                        clamp(online_player_pos.y, min(self.get_position(p.position,True).y, self.get_position(p.old_pos,True).y), max(self.get_position(p.position,True).y, self.get_position(p.old_pos,True).y)))
                     online_rect = pygame.Rect(pos.x - (self.tile_size // 2),
                                                      pos.y - (self.tile_size // 2),
                                                      self.tile_size,
@@ -374,9 +377,9 @@ class TileWorld(PyGameScene):
 
 
                 if (can_move_x or self.editor_overlay.visible) and not self.chat_input.is_focused():
-                    self.get_position().x += dx * speed_px_per_frame
+                    self.position.x += dx * speed_px_per_frame
                 if (can_move_y or self.editor_overlay.visible) and not self.chat_input.is_focused():
-                    self.get_position().y += dy * speed_px_per_frame
+                    self.position.y += dy * speed_px_per_frame
             else:
                 self.animation = 0
         self.animation_tick += 1
@@ -476,10 +479,10 @@ class TileWorld(PyGameScene):
             p = online_handler.online_players[key]
             if p.dimension != self.dimension:
                 continue
-            online_player_pos = (((p.position + -p.old_pos) / 3.0) * p.tick) + p.old_pos
+            online_player_pos = (((self.get_position(p.position,True) + -self.get_position(p.old_pos,True)) / 3.0) * p.tick) + self.get_position(p.old_pos,True)
             online_player_texture = self.get_animation_state(p.direction,p.animation,p.animation_tick)
 
-            pos = Vector2i(clamp(online_player_pos.x,min(p.position.x,p.old_pos.x),max(p.position.x,p.old_pos.x)),clamp(online_player_pos.y,min(p.position.y,p.old_pos.y),max(p.position.y,p.old_pos.y)))
+            pos = Vector2i(clamp(online_player_pos.x,min(self.get_position(p.position,True).x,self.get_position(p.old_pos,True).x),max(self.get_position(p.position,True).x,self.get_position(p.old_pos,True).x)),clamp(online_player_pos.y,min(self.get_position(p.position,True).y,self.get_position(p.old_pos,True).y),max(self.get_position(p.position,True).y,self.get_position(p.old_pos,True).y)))
             p.tick += 1
             online_player_rect = pygame.Rect(pos.x - self.camera_rect.x - (self.tile_size // 2), pos.y - self.camera_rect.y - (self.tile_size // 2), self.tile_size, self.tile_size)
             context.text(p.name, "Boxy-Bold", Vector2i(online_player_rect.centerx - (pygame.font.SysFont("Boxy-Bold",24).size(p.name)[0] // 2), online_player_rect.y - self.chunk_size), 24)
