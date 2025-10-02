@@ -2,7 +2,7 @@ from better_math import Vector2i
 
 
 class Player:
-    def __init__(self, uuid : str,name : str, position : Vector2i,old_pos : Vector2i,direction : int,animation : int,animation_tick : int,skin : int):
+    def __init__(self, uuid : str,name : str, position : Vector2i,old_pos : Vector2i,direction : int,animation : int,animation_tick : int,skin : int, dimension : str):
         self.uuid = uuid
         self.name = name
         self.position = position
@@ -10,4 +10,6 @@ class Player:
         self.direction = direction
         self.animation = animation
         self.animation_tick = animation_tick
+        self.skin = skin
         self.tick = 0
+        self.dimension = dimension

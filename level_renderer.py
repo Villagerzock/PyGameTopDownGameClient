@@ -37,15 +37,17 @@ class TileWorld(PyGameScene):
         self.floor_tile = "Overworld_Tileset_01_06"
         self.camera_rule = "move_free"
         value_handler.tile_types["door"] = DoorType
-
+        if online_handler.id != "":
+            self.initialize_packet()
         value_handler.tile_world_type = TileWorld
         self.chat_input = None
-        online_handler.client.join_server()
         self.editor_overlay = None
         self.save_button = None
+        self.chunk_size = 32
+        self.render_distance = 1
         self.load_world(f"{self.dimension}.json")
+        value_handler.TileChunk.SIZE = self.chunk_size
         self.chat_input_text = ""
-        scene_handler.debugging = True
         super().__init__()
 
     texture_cache : dict[str,pygame.Surface] = {}
@@ -55,7 +57,9 @@ class TileWorld(PyGameScene):
             self.texture_cache[name] = pygame.transform.scale(pygame.image.load(prefix + name + ".png").convert_alpha(),(self.tile_size,self.tile_size))
             return self.texture_cache[name]
         return texture
-
+    def initialize_packet(self):
+        print(online_handler.id)
+        online_handler.client.send_opcode(4,struct.pack("!I",len(online_handler.id.encode('utf-8'))) + online_handler.id.encode('utf-8') + struct.pack("!I",len(self.dimension.encode('utf-8'))) + self.dimension.encode('utf-8'))
     def save_world(self, name: str = "overworld.json") -> None:
         """
         Speichert alle Chunks nach ./dim/<name> im Format:
@@ -72,12 +76,15 @@ class TileWorld(PyGameScene):
         chunk_items : list[tuple[tuple[int,int],TileChunk]] = []
         for item in items:
             print(item[1].tiles.count(-1))
-            if item[1].tiles.count(-1) != (32 * 32):
+            if item[1].tiles.count(-1) != (self.chunk_size * self.chunk_size):
+                print(item[1].tiles.count(-1))
                 chunk_items.append(item)
         data = {
             "meta":{
                 "floor":self.floor_tile,
-                "camera_rule":self.camera_rule
+                "camera_rule":self.camera_rule,
+                "chunk_size":self.chunk_size,
+                "render_distance":self.render_distance,
             },
             "chunks": [
                 {
@@ -108,6 +115,8 @@ class TileWorld(PyGameScene):
         self.chunks = {}
         self.floor_tile = data.get("meta").get("floor") if data.get("meta") is not None else "Overworld_Tileset_01_06"
         self.camera_rule = data.get("meta").get("camera_rule") if data.get("meta") is not None else "move_free"
+        self.chunk_size = data.get("meta").get("chunk_size") if data.get("meta") is not None else 32
+        self.render_distance = data.get("meta").get("render_distance") if data.get("meta") is not None else 1
         for entry in data.get("chunks", []):
             pos = entry.get("pos", [0, 0])
             tiles = entry.get("tiles", [])
@@ -117,6 +126,9 @@ class TileWorld(PyGameScene):
     is_select_mode = False
     selected : tuple[TileChunk,int] | None = None
 
+    def get_position(self, position_offset : Vector2i = Vector2i(0,0)) -> Vector2i:
+        print(self.position.x * (self.tile_size / 64.0))
+        return Vector2i(int((self.position.x + position_offset.x) * (self.tile_size / 64.0)),int((self.position.y + position_offset.x) * (self.tile_size / 64.0)))
     def update(self):
         global tiles
         super().update()
@@ -126,11 +138,11 @@ class TileWorld(PyGameScene):
         hotspot = (12, 4)
         cursor = pygame.cursors.Cursor(hotspot, png)
         pygame.mouse.set_cursor(cursor)
-        #self.tile_size = min(scene_handler.camera_size.y,scene_handler.camera_size.x) // 20
+        self.tile_size = min(scene_handler.camera_size.y,scene_handler.camera_size.x) // 16
         self.texture_cache.clear()
-        self.camera_rect = pygame.Rect(self.position.x - (scene_handler.camera_size.x // 2), self.position.y - (scene_handler.camera_size.y // 2), scene_handler.camera_size.x,scene_handler.camera_size.y)
-        self.camera_rect.center = (self.position.x, self.position.y)
-        self.editor_overlay = EditorTileOverlay(pygame.Rect(scene_handler.camera_size.x - (self.tile_size * 10),0,(self.tile_size * 10),scene_handler.camera_size.y),tile_size=self.tile_size,tiles=tiles,scene=self)
+        self.camera_rect = pygame.Rect(self.get_position().x - (scene_handler.camera_size.x // 2), self.get_position().y - (scene_handler.camera_size.y // 2), scene_handler.camera_size.x,scene_handler.camera_size.y)
+        self.camera_rect.center = (self.get_position().x, self.get_position().y)
+        self.editor_overlay = EditorTileOverlay(pygame.Rect(scene_handler.camera_size.x - (self.tile_size * 6),0,(self.tile_size * 10),scene_handler.camera_size.y),tile_size=self.tile_size,tiles=tiles,scene=self)
         self.editor_overlay.visible = False
         self.drawables.append(
             self.editor_overlay
@@ -141,7 +153,7 @@ class TileWorld(PyGameScene):
         def click_on_edit():
             print("Editing Data!")
             if self.selected is not None and tiles[self.selected[0].get_type(self.selected[1])].get("type") is not None:
-                value_handler.open_screen = screens.ModifyTileScreen(value_handler.tile_types[tiles[self.selected[0].get_type(self.selected[1])]["type"]](),*self.selected)
+                value_handler.open_screen = screens.ModifyTileScreen(value_handler.tile_types[tiles[self.selected[0].get_type(self.selected[1])]["type"]](self.selected[0].get_data(self.selected[1])),*self.selected)
         self.edit_button = TextureButton("textures/gui/pencil.png", (16,56),(32,32),toggle_edit_mode)
         self.edit_button.visible = False
         self.modify_button = TextureButton("textures/gui/edit.png", (48,56),(32,32),click_on_edit)
@@ -178,6 +190,7 @@ class TileWorld(PyGameScene):
 
     camera_rect : pygame.Rect
     position : Vector2i = Vector2i(0, 0)
+    skin = 0
     tile_size = 64
     direction = 0
     animation = 0
@@ -269,14 +282,17 @@ class TileWorld(PyGameScene):
                 dy /= length
                 can_move_x = True
                 can_move_y = True
-                local_rect_x = pygame.Rect(0,0,self.tile_size // 2,self.tile_size)
-                local_rect_x.center = (self.position.x + (dx * speed_px_per_frame), self.position.y)
-                local_rect_y = pygame.Rect(0,0,self.tile_size // 2,self.tile_size)
-                local_rect_y.center = (self.position.x, self.position.y + (dy * speed_px_per_frame))
-                local_rect_current = pygame.Rect(0,0,self.tile_size // 2,self.tile_size)
-                local_rect_current.center = (self.position.x, self.position.y)
+                local_rect_x = pygame.Rect(0,0,self.tile_size // 2 + 2,self.tile_size)
+                local_rect_x.center = (self.get_position().x + (dx * speed_px_per_frame), self.get_position().y)
+                local_rect_y = pygame.Rect(0,0,self.tile_size // 2 + 2,self.tile_size)
+                local_rect_y.center = (self.get_position().x, self.get_position().y + (dy * speed_px_per_frame))
+                local_rect_current = pygame.Rect(0,0,self.tile_size // 2 + 2,self.tile_size)
+                local_rect_current.center = (self.get_position().x, self.get_position().y)
                 for key in online_handler.online_players:
                     p = online_handler.online_players[key]
+                    print(f"Player: {p.dimension} Self: {self.dimension}")
+                    if p.dimension != self.dimension:
+                        continue
                     online_player_pos = (((p.position + -p.old_pos) / 7.0) * p.tick) + p.old_pos
 
                     pos = Vector2i(
@@ -309,26 +325,26 @@ class TileWorld(PyGameScene):
 
                         push_strength = 10
 
-                        self.position.x += int(dx * push_strength)
-                        self.position.y += int(dy * push_strength)
+                        self.get_position().x += int(dx * push_strength)
+                        self.get_position().y += int(dy * push_strength)
 
                 for x in range(-1,2):
-                    for y in range(-1,2):
-                        wx = (self.position.x + x * self.tile_size)
-                        wy = (self.position.y + y * self.tile_size)
+                    for y in range(-1, 2):
+                        wx = (self.get_position().x + x * self.tile_size)
+                        wy = (self.get_position().y + y * self.tile_size)
 
                         # --- Welt-Tile-Koordinaten (in Tiles, nicht Pixel!) ---
                         world_tile_x = wx // self.tile_size
                         world_tile_y = wy // self.tile_size
 
                         # --- Chunk-Koordinaten (welcher 32x32-Block) ---
-                        chunk_x = world_tile_x // 32
-                        chunk_y = world_tile_y // 32
+                        chunk_x = world_tile_x // self.chunk_size
+                        chunk_y = world_tile_y // self.chunk_size
 
                         # --- Lokaler Index im Chunk (0..1023) ---
-                        local_x = world_tile_x % 32
-                        local_y = world_tile_y % 32
-                        local_index = local_y * 32 + local_x
+                        local_x = world_tile_x % self.chunk_size
+                        local_y = world_tile_y % self.chunk_size
+                        local_index = local_y * self.chunk_size + local_x
 
                         chunk = self.chunks.get((chunk_x,chunk_y))
                         if chunk is None:
@@ -358,25 +374,66 @@ class TileWorld(PyGameScene):
 
 
                 if (can_move_x or self.editor_overlay.visible) and not self.chat_input.is_focused():
-                    self.position.x += dx * speed_px_per_frame
+                    self.get_position().x += dx * speed_px_per_frame
                 if (can_move_y or self.editor_overlay.visible) and not self.chat_input.is_focused():
-                    self.position.y += dy * speed_px_per_frame
+                    self.get_position().y += dy * speed_px_per_frame
             else:
                 self.animation = 0
         self.animation_tick += 1
         online_handler.throttled_sender.tick(scene_handler.delta,int(self.position.x),int(self.position.y),int(self.direction),int(self.animation),int(self.animation_tick))
         if self.camera_rule == "move_free":
-            self.camera_rect.center = (self.position.x, self.position.y)
-        chunk_size_px = self.tile_size * 32
+            self.camera_rect.center = (self.get_position().x, self.get_position().y)
+        if self.camera_rule == "rooms":
+            # Größe eines Chunks in Pixeln
+            room_w = self.chunk_size * self.tile_size
+            room_h = self.chunk_size * self.tile_size
+
+            # Bestimme in welchem Chunk der Spieler ist
+            chunk_x = int(self.get_position().x // room_w)
+            chunk_y = int(self.get_position().y // room_h)
+
+            # Ziel: Mittelpunkt dieses Chunks
+            target_center = (
+                chunk_x * room_w + room_w // 2,
+                chunk_y * room_h + room_h // 2
+            )
+
+            # Erste Initialisierung → Kamera direkt setzen
+            if not hasattr(self, "camera_target"):
+                self.camera_target = target_center
+                self.camera_rect.center = target_center
+                self.transition_frame = 0
+                self.start_center = target_center
+            else:
+                # Hat sich das Ziel geändert? → Übergang starten
+                if target_center != self.camera_target:
+                    self.camera_target = target_center
+                    self.start_center = self.camera_rect.center
+                    self.transition_frame = 0
+
+                # Wenn wir noch nicht am Ziel sind → interpolieren
+                if self.camera_rect.center != self.camera_target:
+                    self.transition_frame += 1
+                    t = min(self.transition_frame / 20.0, 1.0)  # 20 Frames animieren
+
+                    # Linear Interpolation Start → Ziel
+                    new_cx = self.start_center[0] + (self.camera_target[0] - self.start_center[0]) * t
+                    new_cy = self.start_center[1] + (self.camera_target[1] - self.start_center[1]) * t
+                    self.camera_rect.center = (new_cx, new_cy)
+                else:
+                    # Ziel erreicht → sicherstellen, dass es exakt sitzt
+                    self.camera_rect.center = self.camera_target
+
+        chunk_size_px = self.tile_size * self.chunk_size
         player_chunk_pos = Vector2i(
-            int(math.floor(self.position.x / chunk_size_px)),
-            int(math.floor(self.position.y / chunk_size_px)),
+            int(math.floor(self.get_position().x / chunk_size_px)),
+            int(math.floor(self.get_position().y / chunk_size_px)),
         )
         selected_surface = pygame.Surface((self.tile_size, self.tile_size))
         pygame.draw.rect(selected_surface, (120, 120, 255), (0, 0, self.tile_size, self.tile_size))
         selected_surface.set_alpha(127)
-        for rx in range(-1, 2):
-            for ry in range(-1, 2):
+        for rx in range(-self.render_distance, self.render_distance + 1):
+            for ry in range(-self.render_distance, self.render_distance + 1):
                 chunk_pos = Vector2i(player_chunk_pos.x + rx, player_chunk_pos.y + ry)
                 chunk = self.chunks.get((chunk_pos.x, chunk_pos.y))
                 if chunk is None:
@@ -389,8 +446,8 @@ class TileWorld(PyGameScene):
 
                 for i, id in enumerate(chunk.tiles):
                     tid = chunk.get_type(i)
-                    local_x = i % 32
-                    local_y = i // 32
+                    local_x = i % self.chunk_size
+                    local_y = i // self.chunk_size
                     dst_x = chunk_origin_x + local_x * self.tile_size
                     dst_y = chunk_origin_y + local_y * self.tile_size
 
@@ -405,25 +462,27 @@ class TileWorld(PyGameScene):
                     if self.editor_overlay.visible and self.selected is not None and (self.selected[0] == chunk and self.selected[1] == i) and self.is_select_mode:
                         surface.blit(selected_surface, (dst_x, dst_y))
                     #pygame.draw.rect(surface, (0, 255, 0),(dst_x, dst_y,self.tile_size, self.tile_size),1)
-                pygame.draw.rect(surface, (255,0,0), (chunk_origin_x, chunk_origin_y, chunk_size_px, chunk_size_px),1)
+                #pygame.draw.rect(surface, (255,0,0), (chunk_origin_x, chunk_origin_y, chunk_size_px, chunk_size_px),1)
 
 
-        player_rect = pygame.Rect(self.position.x - self.camera_rect.x - (self.tile_size // 2),self.position.y - self.camera_rect.y - (self.tile_size // 2),self.tile_size,self.tile_size)
+        player_rect = pygame.Rect(self.get_position().x - self.camera_rect.x - (self.tile_size // 2),self.get_position().y - self.camera_rect.y - (self.tile_size // 2),self.tile_size,self.tile_size)
         player_texture = self.get_animation_state(self.direction,self.animation,self.animation_tick)
         context = draw_context.DrawContext(surface)
 
-        context.text(value_handler.username,"Boxy-Bold",Vector2i(player_rect.centerx - (pygame.font.SysFont("Boxy-Bold",24).size(value_handler.username)[0] // 2), player_rect.y - 32),24)
+        context.text(value_handler.username,"Boxy-Bold",Vector2i(player_rect.centerx - (pygame.font.SysFont("Boxy-Bold",24).size(value_handler.username)[0] // 2), player_rect.y - self.chunk_size),24)
         surface.blit(player_texture,(player_rect.x,player_rect.y))
 
         for key in online_handler.online_players:
             p = online_handler.online_players[key]
+            if p.dimension != self.dimension:
+                continue
             online_player_pos = (((p.position + -p.old_pos) / 3.0) * p.tick) + p.old_pos
             online_player_texture = self.get_animation_state(p.direction,p.animation,p.animation_tick)
 
             pos = Vector2i(clamp(online_player_pos.x,min(p.position.x,p.old_pos.x),max(p.position.x,p.old_pos.x)),clamp(online_player_pos.y,min(p.position.y,p.old_pos.y),max(p.position.y,p.old_pos.y)))
             p.tick += 1
             online_player_rect = pygame.Rect(pos.x - self.camera_rect.x - (self.tile_size // 2), pos.y - self.camera_rect.y - (self.tile_size // 2), self.tile_size, self.tile_size)
-            context.text(p.name, "Boxy-Bold", Vector2i(online_player_rect.centerx - (pygame.font.SysFont("Boxy-Bold",24).size(p.name)[0] // 2), online_player_rect.y - 32), 24)
+            context.text(p.name, "Boxy-Bold", Vector2i(online_player_rect.centerx - (pygame.font.SysFont("Boxy-Bold",24).size(p.name)[0] // 2), online_player_rect.y - self.chunk_size), 24)
             surface.blit(online_player_texture, (online_player_rect.x,online_player_rect.y))
         if value_handler.open_screen is not None:
             value_handler.open_screen.render(surface,events)
@@ -435,13 +494,13 @@ class TileWorld(PyGameScene):
         world_tile_y = (my + self.camera_rect.y) // self.tile_size
 
         # --- Chunk-Koordinaten (welcher 32x32-Block) ---
-        chunk_x = world_tile_x // 32
-        chunk_y = world_tile_y // 32
+        chunk_x = world_tile_x // self.chunk_size
+        chunk_y = world_tile_y // self.chunk_size
 
         # --- Lokaler Index im Chunk (0..1023) ---
-        local_x = world_tile_x % 32
-        local_y = world_tile_y % 32
-        local_index = local_y * 32 + local_x
+        local_x = world_tile_x % self.chunk_size
+        local_y = world_tile_y % self.chunk_size
+        local_index = local_y * self.chunk_size + local_x
 
         if self.editor_overlay.visible and not self.editor_overlay.get_rect().collidepoint(mx, my) and not self.modify_button.get_rect().collidepoint(mx, my) and not self.edit_button.get_rect().collidepoint(mx, my) and not self.save_button.get_rect().collidepoint(mx, my):
 
@@ -459,7 +518,7 @@ class TileWorld(PyGameScene):
                 else:
                     for tilex in range(self.editor_overlay.selected[0].x,self.editor_overlay.selected[1].x + 1):
                         for tiley in range(self.editor_overlay.selected[0].y, self.editor_overlay.selected[1].y + 1):
-                            chunk.tiles[local_index + (32 * (tiley - self.editor_overlay.selected[0].y )) + (tilex - self.editor_overlay.selected[0].x )] = int((18 * tiley) + tilex)
+                            chunk.tiles[local_index + (self.chunk_size * (tiley - self.editor_overlay.selected[0].y )) + (tilex - self.editor_overlay.selected[0].x )] = int((18 * tiley) + tilex)
             elif pygame.mouse.get_pressed()[1]:
                 chunk = self.chunks.get((chunk_x, chunk_y))
                 if chunk is None:

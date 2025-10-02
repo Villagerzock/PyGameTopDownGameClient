@@ -7,11 +7,13 @@ from typing import Callable, Optional, List, Tuple
 from uuid import UUID
 
 import pygame.time
+import scene_handler
 from better_math import Vector2i
 from pygame import Vector2
 
 import value_handler
 from byte_buffer import ByteBuffer
+from screens import LoadingScreen
 from player import Player
 
 Addr = Tuple[str, int]
@@ -63,6 +65,7 @@ class UdpClient:
         pkt = struct.pack("!BI", 0x00, len(name_bytes)) + name_bytes
 
         # Optional separat ein kurzzeitiges Timeout setzen (nur fürs Senden/erste Antwort, falls gewünscht)
+        #value_handler.open_screen = LoadingScreen()
         old_timeout = self.sock.gettimeout()
         self.sock.settimeout(timeout)
         try:
@@ -193,8 +196,19 @@ def join_answer_packet(bytes, addr):
 
     id = buffer.get_string()
     name = buffer.get_string()
-    position = Vector2i
+    position = Vector2i(buffer.get_int(),buffer.get_int())
+    direction = buffer.get_int()
+    skin = buffer.get_int()
+    dimension = buffer.get_string()
+    print(f"Starting Dimension {dimension}")
+    scene_handler.current_scene = value_handler.tile_world_type(dimension)
+    scene_handler.current_scene.position = position
+    scene_handler.current_scene.direction = direction
+    scene_handler.current_scene.skin = skin
     value_handler.username = name
+    value_handler.open_screen = None
+    scene_handler.current_scene.initialize_packet()
+    scene_handler.current_scene.update()
 
     print(f"UUID: {id}")
 
@@ -208,7 +222,8 @@ def register_player(bytes, addr):
     y = buffer.get_int()
     dir = buffer.get_int()
     skin = buffer.get_int()
-    p = Player(player_uuid, name, Vector2i(x, y),Vector2i(x,y),dir,0,0, skin)
+    dimension = buffer.get_string()
+    p = Player(player_uuid, name, Vector2i(x, y),Vector2i(x,y),dir,0,0, skin,dimension)
     online_players[player_uuid] = p
     print(f"Updating Player {p.position} {p.old_pos} {p.direction} {p.animation} {p.animation_tick}")
 
@@ -225,9 +240,10 @@ def update_player(bytes, addr):
     dir = buffer.get_int()
     animation = buffer.get_int()
     animationTick = buffer.get_int()
+    dimension = buffer.get_string()
     p = online_players.get(player_uuid)
     if p is None:
-        p = Player(player_uuid,name,Vector2i(x,y),Vector2i(x,y),0,0,0,0)
+        p = Player(player_uuid,name,Vector2i(x,y),Vector2i(x,y),0,0,0,0, "")
         online_players[player_uuid] = p
     old_pos = p.position
     p.position = Vector2i(x,y)
@@ -235,6 +251,7 @@ def update_player(bytes, addr):
     p.direction = dir
     p.animation = animation
     p.animation_tick = animationTick
+    p.dimension = dimension
     p.tick = 0
 
 

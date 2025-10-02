@@ -2385,6 +2385,7 @@
   },
   {
     "texture": "Overworld_Tileset_09_08",
+    "type": "door",
     "collision": [
       true,
       true,
@@ -2637,6 +2638,7 @@
   },
   {
     "texture": "Overworld_Tileset_10_08",
+    "type": "door",
     "collision": [
       false,
       false,
@@ -3379,6 +3381,7 @@
   },
   {
     "texture": "Dungeon_Tileset_00_07",
+    "type": "door",
     "collision": [
       false,
       false,
@@ -3435,6 +3438,90 @@
   },
   {
     "texture": "Dungeon_Tileset_00_11",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Dungeon_Tileset_00_12",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
     "collision": [
       false,
       false,
@@ -3547,6 +3634,7 @@
   },
   {
     "texture": "Dungeon_Tileset_01_07",
+    "type": "door",
     "collision": [
       false,
       false,
@@ -3603,6 +3691,85 @@
   },
   {
     "texture": "Dungeon_Tileset_01_11",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
     "collision": [
       false,
       false,
@@ -3783,6 +3950,85 @@
       false
     ]
   },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
   {
     "texture": "Dungeon_Tileset_03_00",
     "collision": [
@@ -3939,6 +4185,85 @@
   },
   {
     "texture": "Dungeon_Tileset_03_11",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
     "collision": [
       false,
       false,
@@ -4119,6 +4444,85 @@
       false
     ]
   },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
   {
     "texture": "Dungeon_Tileset_05_00",
     "collision": [
@@ -4275,6 +4679,85 @@
   },
   {
     "texture": "Dungeon_Tileset_05_11",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
     "collision": [
       false,
       false,
@@ -4455,6 +4938,85 @@
       false
     ]
   },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
   {
     "texture": "Dungeon_Tileset_07_00",
     "collision": [
@@ -4611,6 +5173,85 @@
   },
   {
     "texture": "Dungeon_Tileset_07_11",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
     "collision": [
       false,
       false,
@@ -4791,6 +5432,85 @@
       false
     ]
   },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
   {
     "texture": "Dungeon_Tileset_09_00",
     "collision": [
@@ -4947,6 +5667,85 @@
   },
   {
     "texture": "Dungeon_Tileset_09_11",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
     "collision": [
       false,
       false,
@@ -5127,6 +5926,85 @@
       false
     ]
   },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
   {
     "texture": "Dungeon_Tileset_11_00",
     "collision": [
@@ -5283,6 +6161,85 @@
   },
   {
     "texture": "Dungeon_Tileset_11_11",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+    {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
+    "collision": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },  {
+    "texture": "Overworld_Tileset_04_09",
     "collision": [
       false,
       false,

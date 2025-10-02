@@ -8,6 +8,8 @@ from pygame_scene import PyGameScene
 class TileType:
     def __init__(self, data : dict = {}):
         self.data = data
+    def get_data(self,key : str):
+        return self.data.get(key) if self.data.get(key) is not None else ""
     def on_player_enter(self):
         pass
     def on_player_leave(self):

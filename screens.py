@@ -8,17 +8,23 @@ from elements.text import Text, TextEdit
 from pygame.math import clamp
 from pygame_scene import PyGameScene, PyGameUIHandler
 
-from value_handler import TileChunk, Screen
+from value_handler import TileChunk, Screen, TileType
 
-
+class LoadingScreen(Screen):
+    def update(self):
+        super().update()
+        self.drawables.append(Text("Connecting To Server...","arial",pygame.Rect(scene_handler.camera_size.x // 2,scene_handler.camera_size.y // 2, 0, 16)))
+    def render(self, screen, events):
+        pygame.draw.rect(screen,(40,120,40),(0,0,scene_handler.camera_size.x,scene_handler.camera_size.y))
+        super().render(screen,events)
 class ModifyTileScreen(Screen):
-    def __init__(self, tile_instance,chunk : TileChunk,tile_idx):
+    def __init__(self, tile_instance : TileType,chunk : TileChunk,tile_idx):
         self.save_button = None
         self.tile_instance = tile_instance
         self.chunk = chunk
         self.tile_idx = tile_idx
         for value in self.tile_instance.get_values():
-            self.objects[value] = TextEdit("","","arial",pygame.Rect(0,0,0,0))
+            self.objects[value] = TextEdit(tile_instance.data.get(value) if tile_instance.data.get(value) is not None else "","","arial",pygame.Rect(0,0,0,0))
         super().__init__()
     objects : dict[str, PyGameUIHandler] = {}
     def update(self):
@@ -29,7 +35,7 @@ class ModifyTileScreen(Screen):
                 values[value] = self.objects[value].text
             self.chunk.tiles[self.tile_idx] = (self.chunk.get_type(self.tile_idx), values)
 
-        self.save_button = Button("Save",(scene_handler.camera_size.x // 2,scene_handler.camera_size.y // 2 + 270),(250,self.frames),pygame.font.SysFont("arial",16),save)
+        self.save_button = Button("Save",(scene_handler.camera_size.x // 2,scene_handler.camera_size.y // 2 + 270),(250,40),pygame.font.SysFont("arial",16),save)
         self.drawables.append(self.save_button)
         for value in self.tile_instance.get_values():
             text_rect = pygame.Rect(scene_handler.camera_size.x // 2 - 330, scene_handler.camera_size.y // 2 - 296 + y,pygame.font.SysFont("arial",16).size(value)[0],16)
@@ -63,14 +69,14 @@ class FadeOutScreen(Screen):
     tick = 1
     fading_in = False
     has_called_on_faded_out = False
-    frames = 40
+    frames = 60
     def fade_in(self):
         self.fading_in = True
         print("Fade In")
     def render(self,surface,events):
         super().render(surface,events)
         fade_out_dif = self.tick
-        new_scale = Vector2i(scene_handler.camera_size.x / clamp(2 * fade_out_dif,1,self.frames), (scene_handler.camera_size.x / clamp(2 * self.tick,1,self.frames)) * (scene_handler.camera_size.x / scene_handler.camera_size.y))
+        new_scale = Vector2i(scene_handler.camera_size.x / clamp(10 * fade_out_dif,1,self.frames), (scene_handler.camera_size.x / clamp(10 * self.tick,1,self.frames)) * (scene_handler.camera_size.x / scene_handler.camera_size.y))
         surface_copy = surface.copy()
         surface_copy = pygame.transform.scale(surface_copy,(new_scale.x,new_scale.y))
         surface_copy = pygame.transform.scale(surface_copy,(scene_handler.camera_size.x,scene_handler.camera_size.y))
@@ -79,7 +85,7 @@ class FadeOutScreen(Screen):
             self.on_faded_out(self)
             self.has_called_on_faded_out = True
         if self.fading_in:
-            if self.tick >= self.frames:
+            if self.tick == 0:
                 self.close()
 
         surface_copy.blit(self.fade_out_surface,(0,0))

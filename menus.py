@@ -150,6 +150,7 @@ class MainMenu(PyGameScene):
     def update(self):
         super().update()
         def multiplayer():
+            online_handler.client.join_server()
             scene_handler.current_scene = TileWorld()
         self.drawables.append(
             Button("Multiplayer", (scene_handler.camera_size.x // 2, scene_handler.camera_size.y // 2), (250, 40),pygame.font.SysFont("Boxy-Bold", 16),multiplayer),
