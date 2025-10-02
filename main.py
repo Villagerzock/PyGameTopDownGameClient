@@ -9,6 +9,7 @@ from pygame_scene import PyGameScene, PyOverlay
 
 
 import online_handler
+import value_handler
 from menus import Login
 
 
@@ -34,7 +35,9 @@ def setup(default_scene : PyGameScene,window_name="PyGameUI Window"):
                 scene_handler.current_scene.update()
         if running:
             running = scene_handler.current_scene.render(screen,events)
-
+        else:
+            if isinstance(scene_handler.current_scene,value_handler.tile_world_type):
+                scene_handler.current_scene.close()
         pygame.display.update()
         scene_handler.delta = clock.tick(scene_handler.FPS)
 
