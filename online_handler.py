@@ -2,12 +2,18 @@ import socket
 import struct
 import sys
 import threading
+from io import BytesIO
 from typing import Callable, Optional, List, Tuple
 from uuid import UUID
 
+import pygame.time
+import scene_handler
 from better_math import Vector2i
+from pygame import Vector2
 
+import value_handler
 from byte_buffer import ByteBuffer
+from screens import LoadingScreen
 from player import Player
 
 Addr = Tuple[str, int]
@@ -26,7 +32,7 @@ class UdpClient:
         # Ein einziges Socket zum Senden & Empfangen
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # Beliebigen lokalen Port wählen, damit Antworten ankommen
-        self.sock.bind(("0.0.0.0", int(sys.argv[2])))
+        self.sock.bind(("0.0.0.0", int(sys.argv[1])))
         self.sock.settimeout(recv_timeout)
 
         self._thr = threading.Thread(target=self._worker, name="udp-listener", daemon=True)
@@ -47,7 +53,7 @@ class UdpClient:
             self.handlers += [None] * (index - len(self.handlers) + 1)
         self.handlers[index] = fn
 
-    def join_server(self, playername: str, timeout: float = 2.0) -> int:
+    def join_server(self, timeout: float = 2.0) -> int:
         """
 		Sendet ein UDP-Paket an den Server:
 		  Byte 0:  0x00
@@ -55,10 +61,11 @@ class UdpClient:
 		  Rest:     UTF-8-Bytes des Namens
 		Gibt die Anzahl gesendeter Bytes zurück.
 		"""
-        name_bytes = playername.encode("utf-8")
+        name_bytes = value_handler.auth_token.encode("utf-8")
         pkt = struct.pack("!BI", 0x00, len(name_bytes)) + name_bytes
 
         # Optional separat ein kurzzeitiges Timeout setzen (nur fürs Senden/erste Antwort, falls gewünscht)
+        #value_handler.open_screen = LoadingScreen()
         old_timeout = self.sock.gettimeout()
         self.sock.settimeout(timeout)
         try:
@@ -136,7 +143,7 @@ class PosSender2D:
         self.seq = 0
         self.last_sent = None  # (x, y)
         self._last_hb = 0.0
-        self.hb_interval = 0.1  # 250 ms
+        self.hb_interval = 0.05  # 250 ms
         self._now = time.monotonic
 
     def tick(self, dt, x, y,dir, animation, animationTick):
@@ -176,7 +183,7 @@ class PosSender2D:
             self._last_hb = now
 
 
-client = UdpClient("localhost", 6969)
+client = UdpClient("45.93.249.98", 443)
 throttled_sender = PosSender2D(client)
 online_players : dict[str,Player] = {}
 
@@ -185,33 +192,88 @@ def join_answer_packet(bytes, addr):
     global id
     if id:
         return
-    length = int.from_bytes(bytes[1:4], byteorder="little")
-    id = bytes[4:length + 5].decode("utf-8")
+    buffer = ByteBuffer(bytes)
+
+    id = buffer.get_string()
+    name = buffer.get_string()
+    position = Vector2i(buffer.get_int(),buffer.get_int())
+    direction = buffer.get_int()
+    skin = buffer.get_int()
+    dimension = buffer.get_string()
+    print(f"Starting Dimension {dimension}")
+    scene_handler.current_scene = value_handler.tile_world_type(dimension)
+    scene_handler.current_scene.position = position
+    scene_handler.current_scene.direction = direction
+    scene_handler.current_scene.skin = skin
+    value_handler.username = name
+    value_handler.open_screen = None
+    scene_handler.current_scene.initialize_packet()
+    scene_handler.current_scene.update()
 
     print(f"UUID: {id}")
 
-def update_player(bytes, addr):
+def register_player(bytes, addr):
     buffer = ByteBuffer(bytes)
     player_uuid = buffer.get_string()
     name = buffer.get_string()
-    if name == sys.argv[1]:
+    if name == value_handler.username:
+        return
+    x = buffer.get_int()
+    y = buffer.get_int()
+    dir = buffer.get_int()
+    skin = buffer.get_int()
+    dimension = buffer.get_string()
+    p = Player(player_uuid, name, Vector2i(x, y),Vector2i(x,y),dir,0,0, skin,dimension)
+    online_players[player_uuid] = p
+    print(f"Updating Player {p.position} {p.old_pos} {p.direction} {p.animation} {p.animation_tick}")
+
+
+def update_player(bytes, addr):
+    buffer = ByteBuffer(bytes)
+    #print(bytes)
+    player_uuid = buffer.get_string()
+    name = buffer.get_string()
+    if name == value_handler.username:
         return
     x = buffer.get_int()
     y = buffer.get_int()
     dir = buffer.get_int()
     animation = buffer.get_int()
     animationTick = buffer.get_int()
-    old_pos = Vector2i(0,0)
-    if online_players.get(player_uuid):
-        old_pos = online_players[player_uuid].position
-    p = Player(player_uuid, name, Vector2i(x, y),old_pos,dir,animation,animationTick)
-    online_players[player_uuid] = p
+    dimension = buffer.get_string()
+    p = online_players.get(player_uuid)
+    if p is None:
+        p = Player(player_uuid,name,Vector2i(x,y),Vector2i(x,y),0,0,0,0, "")
+        online_players[player_uuid] = p
+    old_pos = p.position
+    p.position = Vector2i(x,y)
+    p.old_pos = old_pos
+    p.direction = dir
+    p.animation = animation
+    p.animation_tick = animationTick
+    p.dimension = dimension
+    p.tick = 0
+
+
+
 def player_disconnected(bytes, addr):
     buffer = ByteBuffer(bytes)
     player_uuid = buffer.get_string()
     online_players.__delitem__(player_uuid)
 
+def chat_message_received(bytes, addr):
+    buffer = ByteBuffer(bytes)
+    value_handler.chat.append((pygame.time.get_ticks(),buffer.get_string()))
+    print(value_handler.chat)
+def received_ping(bytes, addr):
+    buffer = ByteBuffer(bytes)
+    server_index : int = 0
+    current_player_count = buffer.get_int()
+    max_player_count = buffer.get_int()
+    motd = buffer.get_string()
+    value_handler.server_data[server_index] = (value_handler.server_data[server_index],current_player_count,max_player_count,motd)
 client.add_handler(join_answer_packet)
+client.add_handler(register_player)
 client.add_handler(update_player)
 client.add_handler(player_disconnected)
-
+client.add_handler(chat_message_received)
