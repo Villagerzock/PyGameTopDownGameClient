@@ -111,6 +111,7 @@ class UdpClient:
                 # Handler lookup
                 if opcode < len(self.handlers) and self.handlers[opcode] is not None:
                     try:
+                        print("Received Packet of Type: " + str(opcode))
                         self.handlers[opcode](payload, addr)
                     except Exception as e:
                         # Du kannst hier Logging einbauen
@@ -198,13 +199,12 @@ def join_answer_packet(bytes, addr):
     name = buffer.get_string()
     position = Vector2i(buffer.get_int(),buffer.get_int())
     direction = buffer.get_int()
-    skin = buffer.get_int()
+    value_handler.skin = buffer.get_int()
     dimension = buffer.get_string()
     print(f"Starting Dimension {dimension}")
     scene_handler.current_scene = value_handler.tile_world_type(dimension)
     scene_handler.current_scene.position = position
     scene_handler.current_scene.direction = direction
-    scene_handler.current_scene.skin = skin
     value_handler.username = name
     value_handler.open_screen = None
     scene_handler.current_scene.initialize_packet()
@@ -215,6 +215,7 @@ def join_answer_packet(bytes, addr):
 def register_player(bytes, addr):
     buffer = ByteBuffer(bytes)
     player_uuid = buffer.get_string()
+    print(f"Registering Player")
     name = buffer.get_string()
     if name == value_handler.username:
         return
@@ -225,7 +226,6 @@ def register_player(bytes, addr):
     dimension = buffer.get_string()
     p = Player(player_uuid, name, Vector2i(x, y),Vector2i(x,y),dir,0,0, skin,dimension)
     online_players[player_uuid] = p
-    print(f"Updating Player {p.position} {p.old_pos} {p.direction} {p.animation} {p.animation_tick}")
 
 
 def update_player(bytes, addr):
