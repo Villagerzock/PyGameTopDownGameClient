@@ -46,6 +46,7 @@ class TileChunk:
 
 auth_token : str = ""
 username : str = ""
+skin : int = 0
 chat : list[tuple[int, str]] = []
 server_data : list[tuple[str, int | None, int | None, str | None]] = []
 tile_world_type = None

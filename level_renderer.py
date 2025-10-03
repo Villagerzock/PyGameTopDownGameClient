@@ -33,6 +33,7 @@ with open("tiles.json", "r", encoding="utf-8") as f:
 
 class TileWorld(PyGameScene):
     def __init__(self, dim : str = "overworld"):
+        self.skin = value_handler.skin
         self.dimension = dim
         self.floor_tile = "Overworld_Tileset_01_06"
         self.camera_rule = "move_free"
@@ -193,7 +194,6 @@ class TileWorld(PyGameScene):
 
     camera_rect : pygame.Rect
     position : Vector2i = Vector2i(0, 0)
-    skin = 0
     tile_size = 64
     direction = 0
     animation = 0
@@ -203,14 +203,15 @@ class TileWorld(PyGameScene):
         self.save_button.visible = not self.save_button.visible
         self.edit_button.visible = not self.edit_button.visible
 
-    def get_animation_state(self, direction, animation, animationTick):
+    def get_animation_state(self, direction, animation, animationTick,skin_id : str = "female"):
+        skin = "male" if skin_id == 0 else "female"
         match animation:
             case 0:
-                return self.get_texture(f"Char_idle_{self.get_dir_string(direction)}_00_{((animationTick // 5) % 6):02d}",prefix="textures/player/")
+                return self.get_texture(f"Char{("" if skin_id == 0 else "2")}_idle_{self.get_dir_string(direction)}_00_{((animationTick // 5) % 6):02d}",prefix=f"textures/player/{skin}/")
             case 1:
-                return self.get_texture(f"Char_walk_{self.get_dir_string(direction)}_00_{((animationTick // 10) % 6):02d}",prefix="textures/player/")
+                return self.get_texture(f"Char{("" if skin_id == 0 else "2")}_walk_{self.get_dir_string(direction)}_00_{((animationTick // 10) % 6):02d}",prefix=f"textures/player/{skin}/")
             case _:
-                return self.get_texture(f"Char_4_sides_00_{(direction % 4):02d}",prefix="textures/player/")
+                return self.get_texture(f"Char{("" if skin_id == 0 else "2")}_4_sides_00_{(direction % 4):02d}",prefix=f"textures/player/{skin}/")
     def get_dir_string(self,direction) -> str:
         match direction:
             case 0:
@@ -469,7 +470,7 @@ class TileWorld(PyGameScene):
 
 
         player_rect = pygame.Rect(self.get_position().x - self.camera_rect.x - (self.tile_size // 2),self.get_position().y - self.camera_rect.y - (self.tile_size // 2),self.tile_size,self.tile_size)
-        player_texture = self.get_animation_state(self.direction,self.animation,self.animation_tick)
+        player_texture = self.get_animation_state(self.direction,self.animation,self.animation_tick, skin_id=self.skin)
         context = draw_context.DrawContext(surface)
 
         context.text(value_handler.username,"Boxy-Bold",Vector2i(player_rect.centerx - (pygame.font.SysFont("Boxy-Bold",24).size(value_handler.username)[0] // 2), player_rect.y - self.chunk_size),24)
@@ -480,7 +481,7 @@ class TileWorld(PyGameScene):
             if p.dimension != self.dimension:
                 continue
             online_player_pos = (((self.get_position(p.position,True) + -self.get_position(p.old_pos,True)) / 3.0) * p.tick) + self.get_position(p.old_pos,True)
-            online_player_texture = self.get_animation_state(p.direction,p.animation,p.animation_tick)
+            online_player_texture = self.get_animation_state(p.direction,p.animation,p.animation_tick, skin_id=p.skin)
 
             pos = Vector2i(clamp(online_player_pos.x,min(self.get_position(p.position,True).x,self.get_position(p.old_pos,True).x),max(self.get_position(p.position,True).x,self.get_position(p.old_pos,True).x)),clamp(online_player_pos.y,min(self.get_position(p.position,True).y,self.get_position(p.old_pos,True).y),max(self.get_position(p.position,True).y,self.get_position(p.old_pos,True).y)))
             p.tick += 1
