@@ -1,6 +1,5 @@
 from better_math import Vector2i
 
-
 class Player:
     def __init__(self, uuid : str,name : str, position : Vector2i,old_pos : Vector2i,direction : int,animation : int,animation_tick : int,skin : int, dimension : str):
         self.uuid = uuid

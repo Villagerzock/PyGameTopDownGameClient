@@ -11,8 +11,10 @@ import scene_handler
 from better_math import Vector2i
 from pygame import Vector2
 
+import entities
 import value_handler
 from byte_buffer import ByteBuffer
+from entities import Entity
 from screens import LoadingScreen
 from player import Player
 
@@ -20,7 +22,13 @@ Addr = Tuple[str, int]
 Handler = Callable[[bytes, Addr], None]
 
 id : str = ""
-
+def call_all_on_main_thread():
+    length = len(call_on_main_thread_next_calls)
+    for i in range(length):
+        call_on_main_thread_next_calls[i][0](*call_on_main_thread_next_calls[i][1])
+call_on_main_thread_next_calls : list[tuple[Callable, tuple]] = []
+def call_on_main_thread(call : Callable, args : tuple):
+    call_on_main_thread_next_calls.append((call, args))
 
 class UdpClient:
     def __init__(self, server_ip: str, server_port: int = 9999, recv_timeout: float = 0.5):
@@ -187,7 +195,7 @@ class PosSender2D:
 client = UdpClient("45.93.249.98", 443)
 throttled_sender = PosSender2D(client)
 online_players : dict[str,Player] = {}
-
+loaded_entities : dict[str, Entity] = {}
 
 def join_answer_packet(bytes, addr):
     global id
@@ -272,8 +280,44 @@ def received_ping(bytes, addr):
     max_player_count = buffer.get_int()
     motd = buffer.get_string()
     value_handler.server_data[server_index] = (value_handler.server_data[server_index],current_player_count,max_player_count,motd)
+def entity_loaded(bytes, addr):
+    buffer = ByteBuffer(bytes)
+    uuid = buffer.get_string()
+    entity_type = buffer.get_string()
+    entity_instance = entities.create_new_entity(entity_type, uuid, buffer)
+    def add_entity(entity_instance):
+        loaded_entities[uuid] = entity_instance
+    call_on_main_thread(add_entity, (entity_instance,))
+
+def entity_updated(bytes, addr):
+    buffer = ByteBuffer(bytes)
+    uuid = buffer.get_string()
+    animationTick = buffer.get_int()
+    animation = buffer.get_int()
+    x = buffer.get_int()
+    y = buffer.get_int()
+    direction = buffer.get_int()
+    dimension = buffer.get_string()
+
+    entity = loaded_entities[uuid]
+    entity.animationTick = animationTick
+    entity.animation = animation
+    entity.old_pos = entity.position
+    entity.position = Vector2i(x,y)
+    entity.direction = direction
+    entity.dimension = dimension
+    entity.tick = 0
+    entity.update(buffer)
+def health_updated(bytes, addr):
+    buffer = ByteBuffer(bytes)
+    scene_handler.current_scene.health = buffer.get_int()
+
+
 client.add_handler(join_answer_packet)
 client.add_handler(register_player)
 client.add_handler(update_player)
 client.add_handler(player_disconnected)
 client.add_handler(chat_message_received)
+client.add_handler(entity_updated)
+client.add_handler(entity_loaded)
+client.add_handler(health_updated)

@@ -1,8 +1,13 @@
 import math
+import struct
+
 import pygame
 from better_math import Vector2i
 from pygame.math import clamp
 from pygame_scene import PyOverlay, PyGameScene
+
+import entities
+from byte_buffer import ByteBuffer
 
 
 class EditorTileOverlay(PyOverlay):
@@ -11,6 +16,7 @@ class EditorTileOverlay(PyOverlay):
                  scene: PyGameScene = None):
         super().__init__(rect)
         self.scene = scene
+        self.is_entity_mode = False
         self.tile_size = tile_size
         self.tiles = tiles or []
         self.selected = (Vector2i(0, 0),Vector2i(0, 0))
@@ -108,18 +114,38 @@ class EditorTileOverlay(PyOverlay):
         selected_surface = pygame.Surface((self.tile_size, self.tile_size))
         pygame.draw.rect(selected_surface, (120, 120, 255), (0, 0, self.tile_size, self.tile_size))
         selected_surface.set_alpha(127)
-        for gy in range(start_row, end_row):
-            for gx in range(start_col, end_col):
-                idx = gy * self.GRID_COLS + gx
-                if idx >= len(self.tiles):
-                    continue
-                screen_x = rect.x + (gx + self.editor_offset.x) * self.tile_size
-                screen_y = rect.y + (gy + self.editor_offset.y) * self.tile_size
-                tex = self.scene.get_texture(self.tiles[idx]["texture"])
-                surface.blit(tex, (screen_x, screen_y))
-                if (min(self.selected[0].x, self.selected[1].x) - 1 < gx < max(self.selected[0].x, self.selected[1].x) + 1) and min(self.selected[0].y, self.selected[1].y) - 1 < gy < max(self.selected[0].y, self.selected[1].y) + 1:
+        if self.is_entity_mode:
+            for gy in range(start_row, end_row):
+                for gx in range(start_col, end_col):
+                    idx = gy * self.GRID_COLS + gx
+                    if idx >= len(entities.entity_types.values()):
+                        break
+                    screen_x = rect.x + (gx + self.editor_offset.x) * self.tile_size
+                    screen_y = rect.y + (gy + self.editor_offset.y) * self.tile_size
+                    surf = pygame.Surface((self.tile_size, self.tile_size), pygame.SRCALPHA).convert()
+                    fake_buffer = ByteBuffer(struct.pack("!IIIIIII",0,0,0,0,0,0,0))
+                    entity : entities.Entity = entities.create_new_entity(list(entities.entity_types.keys())[idx],buffer=fake_buffer,uuid="")
+                    entity.render(surf, self.tile_size)
+                    surface.blit(surf, (screen_x, screen_y))
+                    if self.selected[0].x -1 == gx and gy == self.selected[0].y:
+                        surface.blit(selected_surface, (screen_x, screen_y))
 
-                    surface.blit(selected_surface, (screen_x, screen_y))
+
+        else:
+            for gy in range(start_row, end_row):
+                for gx in range(start_col, end_col):
+                    idx = gy * self.GRID_COLS + gx
+                    if idx >= len(self.tiles):
+                        continue
+                    screen_x = rect.x + (gx + self.editor_offset.x) * self.tile_size
+                    screen_y = rect.y + (gy + self.editor_offset.y) * self.tile_size
+                    tex = self.scene.get_texture(self.tiles[idx]["texture"])
+                    surface.blit(tex, (screen_x, screen_y))
+                    if (min(self.selected[0].x, self.selected[1].x) - 1 < gx < max(self.selected[0].x,
+                                                                                   self.selected[1].x) + 1) and min(
+                            self.selected[0].y, self.selected[1].y) - 1 < gy < max(self.selected[0].y,
+                                                                                   self.selected[1].y) + 1:
+                        surface.blit(selected_surface, (screen_x, screen_y))
 
         # Hover/Highlight im Overlay
         if rect.collidepoint(mx, my):

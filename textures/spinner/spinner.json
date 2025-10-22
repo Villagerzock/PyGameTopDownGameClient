@@ -1,0 +1,25 @@
+{
+  "animations": [
+    {
+      "wait": 2,
+      "textures": [
+        "spinner/spinner_charge_00_00",
+        "spinner/spinner_charge_00_01",
+        "spinner/spinner_charge_00_02"
+      ]
+    },
+    {
+      "wait": 3,
+      "textures": [
+        "spinner/spinner_idle_00_00",
+        "spinner/spinner_idle_00_01",
+        "spinner/spinner_idle_00_02",
+        "spinner/spinner_idle_00_03",
+        "spinner/spinner_idle_00_04",
+        "spinner/spinner_idle_00_05",
+        "spinner/spinner_idle_00_06",
+        "spinner/spinner_idle_00_07"
+      ]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import sys
+import threading
 
 import pygame
 import scene_handler
@@ -44,14 +45,18 @@ class LoadingScreen(PyGameScene):
     def __init__(self, mail, password):
         super().__init__()
         print("Loading Screen")
-        if not login(mail, password):
-            print("Couldn't login")
-            scene_handler.current_scene = Login()
+        threading.Thread(target=self.login, args=(mail, password)).start()
+
+
     def update(self):
         super().update()
         self.drawables.append(Text("LOADING...","arial",pygame.Rect(scene_handler.camera_size.x // 2, scene_handler.camera_size.y, 0,64)))
 
+    def login(self,mail, password):
+        if not login(mail, password):
+            print("Couldn't login")
     def render(self, screen, events) -> bool:
+        print("Loading Screen")
         pygame.draw.rect(screen,(40,120,40),(0,0,scene_handler.camera_size.x,scene_handler.camera_size.y))
         return super().render(screen, events)
 
@@ -82,7 +87,6 @@ class Login(PyGameScene):
                    pygame.font.SysFont("Boxy-Bold", 16), register))
 
     def render(self,surface,events):
-        print("Rendering Loading Screen")
         pygame.draw.rect(surface,(40,120,40),(0,0,scene_handler.camera_size.x,scene_handler.camera_size.y))
         return super().render(surface,events)
 
@@ -142,19 +146,20 @@ class RegisterMenu(PyGameScene):
             Button("Login", (scene_handler.camera_size.x // 2, scene_handler.camera_size.y // 2 + 90), (250, 40),
                    pygame.font.SysFont("Boxy-Bold", 16), login_pressed))
 
-    def render(self,surface,events):
+    def render(self,surface, events):
         pygame.draw.rect(surface,(40,120,40),(0,0,scene_handler.camera_size.x,scene_handler.camera_size.y))
-        return super().render(surface,events)
+        return super().render(surface, events)
 
 class MainMenu(PyGameScene):
     def update(self):
         super().update()
+        print("Setting up Main Menu")
         def multiplayer():
             online_handler.client.join_server()
             scene_handler.current_scene = TileWorld()
         self.drawables.append(
             Button("Multiplayer", (scene_handler.camera_size.x // 2, scene_handler.camera_size.y // 2), (250, 40),pygame.font.SysFont("Boxy-Bold", 16),multiplayer),
         )
-    def render(self,surface,events):
+    def render(self,surface, events):
         pygame.draw.rect(surface,(40,120,40),(0,0,scene_handler.camera_size.x,scene_handler.camera_size.y))
         return super().render(surface,events)

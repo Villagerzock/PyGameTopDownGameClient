@@ -76,7 +76,7 @@ class FadeOutScreen(Screen):
     def render(self,surface,events):
         super().render(surface,events)
         fade_out_dif = self.tick
-        new_scale = Vector2i(scene_handler.camera_size.x / clamp(10 * fade_out_dif,1,self.frames), (scene_handler.camera_size.x / clamp(10 * self.tick,1,self.frames)) * (scene_handler.camera_size.x / scene_handler.camera_size.y))
+        new_scale = Vector2i(scene_handler.camera_size.x / clamp(10 * fade_out_dif,1,self.frames), (scene_handler.camera_size.y / clamp(10 * self.tick,1,self.frames)) * (scene_handler.camera_size.x / scene_handler.camera_size.y))
         surface_copy = surface.copy()
         surface_copy = pygame.transform.scale(surface_copy,(new_scale.x,new_scale.y))
         surface_copy = pygame.transform.scale(surface_copy,(scene_handler.camera_size.x,scene_handler.camera_size.y))

@@ -18,3 +18,7 @@ class ByteBuffer:
         length = int.from_bytes(self.data[self.index:self.index + 4],byteorder="big", signed=True)
         self.index += 4
         return length
+    def get_bool(self) -> bool:
+        value = self.data[self.index]
+        self.index += 1
+        return value == 1

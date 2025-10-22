@@ -15,9 +15,11 @@ from pygame.math import clamp
 from pygame_scene import PyGameScene
 
 import custom_renderer
+import entities
 import online_handler
 import screens
 import value_handler
+from byte_buffer import ByteBuffer
 from custom_elements import EditorTileOverlay
 from tile_types import DoorType
 from value_handler import TileChunk
@@ -128,7 +130,7 @@ class TileWorld(PyGameScene):
     selected : tuple[TileChunk,int] | None = None
 
     def get_position(self, position_offset : Vector2i = Vector2i(0,0), is_override : bool = False) -> Vector2i:
-        print(self.position.x * (self.tile_size / 64.0))
+        #print(self.position.x * (self.tile_size / 64.0))
         if is_override:
             return Vector2i(int((position_offset.x) * (self.tile_size / 64.0)),
                             int((position_offset.y) * (self.tile_size / 64.0)))
@@ -146,7 +148,7 @@ class TileWorld(PyGameScene):
         self.texture_cache.clear()
         self.camera_rect = pygame.Rect(self.get_position().x - (scene_handler.camera_size.x // 2), self.get_position().y - (scene_handler.camera_size.y // 2), scene_handler.camera_size.x,scene_handler.camera_size.y)
         self.camera_rect.center = (self.get_position().x, self.get_position().y)
-        self.editor_overlay = EditorTileOverlay(pygame.Rect(scene_handler.camera_size.x - (self.tile_size * 6),0,(self.tile_size * 10),scene_handler.camera_size.y),tile_size=self.tile_size,tiles=tiles,scene=self)
+        self.editor_overlay = EditorTileOverlay(pygame.Rect(scene_handler.camera_size.x - (self.tile_size * 6),0,(self.tile_size * 6),scene_handler.camera_size.y),tile_size=self.tile_size,tiles=tiles,scene=self)
         self.editor_overlay.visible = False
         self.drawables.append(
             self.editor_overlay
@@ -158,13 +160,19 @@ class TileWorld(PyGameScene):
             print("Editing Data!")
             if self.selected is not None and tiles[self.selected[0].get_type(self.selected[1])].get("type") is not None:
                 value_handler.open_screen = screens.ModifyTileScreen(value_handler.tile_types[tiles[self.selected[0].get_type(self.selected[1])]["type"]](self.selected[0].get_data(self.selected[1])),*self.selected)
+        def toggle_entity_mode():
+            print("Toggled Entity Mode")
+            self.editor_overlay.is_entity_mode = not self.editor_overlay.is_entity_mode
         self.edit_button = TextureButton("textures/gui/pencil.png", (16,56),(32,32),toggle_edit_mode)
         self.edit_button.visible = False
         self.modify_button = TextureButton("textures/gui/edit.png", (48,56),(32,32),click_on_edit)
         self.modify_button.visible = False
+        self.entity_editor_button = Button("Entities",(70,56),(50,32),pygame.font.SysFont("Boxy-Bold",16),toggle_entity_mode)
+        self.entity_editor_button.visible = False
         self.drawables.append(self.edit_button)
         self.drawables.append(self.modify_button)
-        
+        self.drawables.append(self.entity_editor_button)
+
         chat_input_rect = pygame.Rect(0,scene_handler.camera_size.y - 40,250,40)
         def chat_input_changed(new_text):
             self.chat_input_text = new_text
@@ -198,10 +206,13 @@ class TileWorld(PyGameScene):
     direction = 0
     animation = 0
     animation_tick = 0
+    health = 11
+    max_hearts = 3
     def toggle_editor(self):
         self.editor_overlay.visible = not self.editor_overlay.visible
         self.save_button.visible = not self.save_button.visible
         self.edit_button.visible = not self.edit_button.visible
+        self.entity_editor_button.visible = not self.entity_editor_button.visible
 
     def get_animation_state(self, direction, animation, animationTick,skin_id : str = "female"):
         skin = "male" if skin_id == 0 else "female"
@@ -240,11 +251,9 @@ class TileWorld(PyGameScene):
 
 
 
-
+    is_mouse_down = False
     def render(self, surface: pygame.Surface, events):
         global tiles
-        if self.selected is not None:
-            print(tiles[self.selected[0].get_type(self.selected[1])].get("type"))
         if self.selected is not None and (tiles[self.selected[0].get_type(self.selected[1])].get("type") is not None):
             self.modify_button.visible = True
         else:
@@ -466,7 +475,7 @@ class TileWorld(PyGameScene):
                     if self.editor_overlay.visible and self.selected is not None and (self.selected[0] == chunk and self.selected[1] == i) and self.is_select_mode:
                         surface.blit(selected_surface, (dst_x, dst_y))
                     #pygame.draw.rect(surface, (0, 255, 0),(dst_x, dst_y,self.tile_size, self.tile_size),1)
-                #pygame.draw.rect(surface, (255,0,0), (chunk_origin_x, chunk_origin_y, chunk_size_px, chunk_size_px),1)
+                pygame.draw.rect(surface, (255,0,0), (chunk_origin_x, chunk_origin_y, chunk_size_px, chunk_size_px),1)
 
 
         player_rect = pygame.Rect(self.get_position().x - self.camera_rect.x - (self.tile_size // 2),self.get_position().y - self.camera_rect.y - (self.tile_size // 2),self.tile_size,self.tile_size)
@@ -488,6 +497,20 @@ class TileWorld(PyGameScene):
             online_player_rect = pygame.Rect(pos.x - self.camera_rect.x - (self.tile_size // 2), pos.y - self.camera_rect.y - (self.tile_size // 2), self.tile_size, self.tile_size)
             context.text(p.name, "Boxy-Bold", Vector2i(online_player_rect.centerx - (pygame.font.SysFont("Boxy-Bold",24).size(p.name)[0] // 2), online_player_rect.y - self.chunk_size), 24)
             surface.blit(online_player_texture, (online_player_rect.x,online_player_rect.y))
+
+        for key in online_handler.loaded_entities:
+            e = online_handler.loaded_entities[key]
+            if e.dimension != self.dimension:
+                continue
+            online_player_pos = (((self.get_position(e.position,True) + -self.get_position(e.old_pos,True)) / 3.0) * e.tick) + self.get_position(e.old_pos,True)
+            #online_player_texture = self.get_animation_state(p.direction,p.animation,p.animation_tick, skin_id=p.skin)
+
+            pos = Vector2i(clamp(online_player_pos.x,min(self.get_position(e.position,True).x,self.get_position(e.old_pos,True).x),max(self.get_position(e.position,True).x,self.get_position(e.old_pos,True).x)),clamp(online_player_pos.y,min(self.get_position(e.position,True).y,self.get_position(e.old_pos,True).y),max(self.get_position(e.position,True).y,self.get_position(e.old_pos,True).y)))
+            e.tick += 1
+            surf = pygame.Surface((e.get_rect(self.tile_size).width,e.get_rect(self.tile_size).height),pygame.SRCALPHA).convert_alpha()
+            e.render(surf,self.tile_size)
+            surface.blit(surf, (pos.x-self.camera_rect.x, pos.y-self.camera_rect.y))
+
         if value_handler.open_screen is not None:
             value_handler.open_screen.render(surface,events)
             return True
@@ -506,24 +529,39 @@ class TileWorld(PyGameScene):
         local_y = world_tile_y % self.chunk_size
         local_index = local_y * self.chunk_size + local_x
 
-        if self.editor_overlay.visible and not self.editor_overlay.get_rect().collidepoint(mx, my) and not self.modify_button.get_rect().collidepoint(mx, my) and not self.edit_button.get_rect().collidepoint(mx, my) and not self.save_button.get_rect().collidepoint(mx, my):
+        if self.editor_overlay.visible and not self.editor_overlay.get_rect().collidepoint(mx, my) and not self.modify_button.get_rect().collidepoint(mx, my) and not self.edit_button.get_rect().collidepoint(mx, my) and not self.entity_editor_button.get_rect().collidepoint(mx, my) and not self.save_button.get_rect().collidepoint(mx, my):
 
             if pygame.mouse.get_pressed()[0]:
-                chunk = self.chunks.get((chunk_x, chunk_y))
-                if chunk is None:
-                    chunk = TileChunk()
-                    self.chunks[(chunk_x, chunk_y)] = chunk
-
-                # Editor-Tile setzen
-                # Editor-Tile setzen
-                if self.is_select_mode:
-                    self.selected = (chunk, local_index)
-
+                if self.editor_overlay.is_entity_mode:
+                    if not self.is_mouse_down:
+                        selected_entity_type = list(entities.entity_types.keys())[int((18 * self.editor_overlay.selected[0].x) + self.editor_overlay.selected[0].x)]
+                        locked_mx = mx + self.camera_rect.x
+                        locked_my = my + self.camera_rect.y
+                        if pygame.key.get_mods() & pygame.KMOD_CTRL:
+                            locked_mx = ((locked_mx) // self.tile_size) * self.tile_size
+                            locked_my = ((locked_my) // self.tile_size) * self.tile_size
+                        else:
+                            locked_my -= self.tile_size // 2
+                            locked_mx -= self.tile_size // 2
+                        online_handler.client.send_opcode(5, struct.pack("!I",len(selected_entity_type)) + selected_entity_type.encode() + struct.pack("!iiI",int(locked_mx / float(self.tile_size) * 64.0),int(locked_my / float(self.tile_size) * 64.0),len(self.dimension)) + self.dimension.encode())
+                    self.is_mouse_down = True
                 else:
-                    for tilex in range(self.editor_overlay.selected[0].x,self.editor_overlay.selected[1].x + 1):
-                        for tiley in range(self.editor_overlay.selected[0].y, self.editor_overlay.selected[1].y + 1):
-                            chunk.tiles[local_index + (self.chunk_size * (tiley - self.editor_overlay.selected[0].y )) + (tilex - self.editor_overlay.selected[0].x )] = int((18 * tiley) + tilex)
+                    chunk = self.chunks.get((chunk_x, chunk_y))
+                    if chunk is None:
+                        chunk = TileChunk()
+                        self.chunks[(chunk_x, chunk_y)] = chunk
+
+                    # Editor-Tile setzen
+                    # Editor-Tile setzen
+                    if self.is_select_mode:
+                        self.selected = (chunk, local_index)
+
+                    else:
+                        for tilex in range(self.editor_overlay.selected[0].x,self.editor_overlay.selected[1].x + 1):
+                            for tiley in range(self.editor_overlay.selected[0].y, self.editor_overlay.selected[1].y + 1):
+                                chunk.tiles[local_index + (self.chunk_size * (tiley - self.editor_overlay.selected[0].y )) + (tilex - self.editor_overlay.selected[0].x )] = int((18 * tiley) + tilex)
             elif pygame.mouse.get_pressed()[1]:
+                self.is_mouse_down = False
                 chunk = self.chunks.get((chunk_x, chunk_y))
                 if chunk is None:
                     chunk = TileChunk()
@@ -531,15 +569,24 @@ class TileWorld(PyGameScene):
 
                 # Editor-Tile setzen
                 chunk.tiles[local_index] = -1
+            else:
+                self.is_mouse_down = False
 
 
             # Vorschau-Rahmen exakt an der Tile unter dem Cursor
             highlight_px_x = world_tile_x * self.tile_size - self.camera_rect.x
             highlight_px_y = world_tile_y * self.tile_size - self.camera_rect.y
+            if self.editor_overlay.is_entity_mode and not pygame.key.get_mods() & pygame.KMOD_CTRL:
+                highlight_px_x = mx - self.tile_size // 2
+                highlight_px_y = my - self.tile_size // 2
             if not self.is_select_mode:
                 for tilex in range(self.editor_overlay.selected[0].x, self.editor_overlay.selected[1].x + 1):
                     for tiley in range(self.editor_overlay.selected[0].y, self.editor_overlay.selected[1].y + 1):
-                        tex = self.get_texture(tiles[int((18 * tiley) + tilex)]["texture"])
+                        fake_buffer = ByteBuffer(struct.pack("!IIIIIII", 0, 0, 0, 0, 0, 0, 0))
+                        tex = pygame.Surface((self.tile_size,self.tile_size),pygame.SRCALPHA).convert_alpha() if self.editor_overlay.is_entity_mode else self.get_texture(tiles[int((18 * tiley) + tilex)]["texture"])
+                        if self.editor_overlay.is_entity_mode:
+                            entities.create_new_entity(list(entities.entity_types.keys())[int((18 * tiley) + tilex)],
+                                                       buffer=fake_buffer, uuid="").render(tex, self.tile_size)
                         surf = tex.copy()
                         surf.set_alpha(127)
                         surface.blit(surf, (highlight_px_x + (tilex - self.editor_overlay.selected[0].x) * self.tile_size, highlight_px_y + (tiley - self.editor_overlay.selected[0].y)  * self.tile_size))
@@ -557,6 +604,28 @@ class TileWorld(PyGameScene):
                 continue
             custom_renderer.Renderer(surface).text(message[1],"arial",Vector2i(0,chat_y),16,alpha=alpha, color=(255,255,255))
             chat_y -= pygame.font.SysFont("Arial",16).get_height() * len(message[1].split("\n"))
+        heart_types = [
+            pygame.image.load("textures/gui/heart_quarter.png").convert_alpha(),
+            pygame.image.load("textures/gui/heart_half.png").convert_alpha(),
+            pygame.image.load("textures/gui/heart_three_quarters.png").convert_alpha(),
+            pygame.image.load("textures/gui/heart.png").convert_alpha(),
+            pygame.image.load("textures/gui/heart_empty.png").convert_alpha()
+        ]
+        for i in range(self.max_hearts):
+            heart_value = self.health - i * 4
+
+            if heart_value >= 4:
+                heart_img = heart_types[3]
+            elif heart_value == 3:
+                heart_img = heart_types[2]
+            elif heart_value == 2:
+                heart_img = heart_types[1]
+            elif heart_value == 1:
+                heart_img = heart_types[0]
+            else:
+                heart_img = heart_types[4]
+
+            surface.blit(pygame.transform.scale(heart_img, (32, 32)), ((i % 20) * 32, (i // 20) * 32))
         return True
 
     is_fullscreen = False

@@ -26,6 +26,7 @@ def setup(default_scene : PyGameScene,window_name="PyGameUI Window"):
     scene_handler.current_scene = default_scene
     default_scene.update()
     while running:
+        online_handler.call_all_on_main_thread()
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
