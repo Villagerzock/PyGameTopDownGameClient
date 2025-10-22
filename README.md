@@ -52,7 +52,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**Minimaler Satz an PyPI-Packages (falls keine `requirements.txt`):**
+**Minimaler Satz an PyPI-Packages:**
 ```
 pygame
 requests
