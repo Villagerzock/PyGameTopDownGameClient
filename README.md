@@ -54,11 +54,12 @@ pip install -r requirements.txt
 
 **Minimaler Satz an PyPI-Packages:**
 ```
+simple-pygame-ui
 pygame
 requests
 ```
 
-> Außerdem nutzt das Projekt eigene/weitere interne Module (`pygame_scene`, `elements.*`, `better_math`, `scene_handler`, etc.). Stelle sicher, dass diese im Repo liegen bzw. als Paket installiert sind.
+> simple-pygame-ui auch bekannt als PyGameUI wurde von mir selber entwickelt und auf PyPI hochgeladen.
 
 ### 3) Starten
 
